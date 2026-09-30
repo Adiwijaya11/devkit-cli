@@ -1,0 +1,44 @@
+{
+  "name": "@adiwijaya11/devkit",
+  "version": "1.0.0",
+  "description": "CLI tool untuk membantu developer membuat project, menginstall teknologi, mengecek environment, dan mencari command yang sering lupa.",
+  "main": "dist/index.js",
+  "bin": {
+    "devkit": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": ["cli", "developer", "project", "wizard", "scaffold", "devkit"],
+  "author": "Adiwijaya11",
+  "license": "ISC",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Adiwijaya11/devkit-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Adiwijaya11/devkit-cli/issues"
+  },
+  "homepage": "https://github.com/Adiwijaya11/devkit-cli#readme",
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.8.1",
+    "execa": "^8.0.1"
+  }
+}
