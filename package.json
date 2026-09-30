@@ -1,5 +1,5 @@
 {
-  "name": "@adiwijaya11/devkit",
+  "name": "devkit-tool",
   "version": "1.0.0",
   "description": "CLI tool untuk membantu developer membuat project, menginstall teknologi, mengecek environment, dan mencari command yang sering lupa.",
   "main": "dist/index.js",

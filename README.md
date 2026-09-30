@@ -5,7 +5,7 @@ CLI tool untuk membantu developer membuat project, menginstall teknologi, mengec
 ## Instalasi
 
 ```bash
-npm install -g @adiwijaya11/devkit
+npm install -g devkit-tool
 ```
 
 ## Penggunaan
@@ -17,7 +17,7 @@ devkit
 Atau tanpa install global:
 
 ```bash
-npx @adiwijaya11/devkit
+npx devkit-tool
 ```
 
 ## Fitur
