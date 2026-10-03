@@ -1,5 +1,13 @@
 import * as p from "@clack/prompts";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 import { reset, bold, dim, yellow, cyan, white, warnaUntukTeknologi, teksBerwarna } from "./warna.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const pkg = JSON.parse(readFileSync(path.join(__dirname, "../../package.json"), "utf-8"));
+const VERSI = pkg.version;
 
 function center(text: string, width: number): string {
   const lines = text.split("\n");
@@ -34,7 +42,7 @@ export async function tampilkanWelcome(): Promise<void> {
   console.log();
 
   const info = [
-    `${bold}${cyan}  Versi:${reset} 1.0.0`,
+    `${bold}${cyan}  Versi:${reset} ${VERSI}`,
     `${bold}${cyan}  Node:${reset} ${process.version}`,
     `${bold}${cyan}  Platform:${reset} ${process.platform}`,
   ];

@@ -5,11 +5,13 @@ import { jalankanBuatProyek } from "./commands/buat.js";
 import { jalankanInstallTeknologi } from "./commands/install.js";
 import { jalankanReferensiPerintah } from "./commands/referensi.js";
 import { tampilkanWelcome } from "./core/welcome.js";
+import { tampilkanUpdate } from "./core/update.js";
 import { reset, bold, cyan, green, yellow, magenta, blue, warnaUntukTeknologi, teksBerwarna } from "./core/warna.js";
 
 type OpsiMenu = "buat" | "install" | "cek" | "bantuan" | "keluar";
 
 async function utama(): Promise<void> {
+  await tampilkanUpdate();
   await tampilkanWelcome();
 
   const opsi = await p.select({

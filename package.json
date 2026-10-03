@@ -1,6 +1,6 @@
 {
   "name": "devkit-tool",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CLI tool untuk membantu developer membuat project, menginstall teknologi, mengecek environment, dan mencari command yang sering lupa.",
   "main": "dist/index.js",
   "bin": {
@@ -19,7 +19,14 @@
     "test": "vitest run",
     "prepublishOnly": "npm run build"
   },
-  "keywords": ["cli", "developer", "project", "wizard", "scaffold", "devkit"],
+  "keywords": [
+    "cli",
+    "developer",
+    "project",
+    "wizard",
+    "scaffold",
+    "devkit"
+  ],
   "author": "Adiwijaya11",
   "license": "ISC",
   "type": "module",

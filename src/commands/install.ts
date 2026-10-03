@@ -1,9 +1,11 @@
 import * as p from "@clack/prompts";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import path from "node:path";
 import { dapatkanSemuaTeknologi } from "../core/registry.js";
 import { execute } from "../core/executor.js";
 import type { DefinisiTeknologi } from "../types/index.js";
 import { jalankanBuatProyek } from "./buat.js";
+import { deteksiEnvironmentLokal } from "../core/environment.js";
 import { reset, bold, dim, green, yellow, cyan, warnaUntukTeknologi, teksBerwarna } from "../core/warna.js";
 
 interface InfoProject {
@@ -11,12 +13,12 @@ interface InfoProject {
   dependencies?: string[];
 }
 
-function deteksiProjectDetail(): InfoProject[] {
+function deteksiProjectDetail(cwd: string = "."): InfoProject[] {
   const hasil: InfoProject[] = [];
 
-  if (existsSync("package.json")) {
+  if (existsSync(path.join(cwd, "package.json"))) {
     try {
-      const pkg = JSON.parse(readFileSync("package.json", "utf-8"));
+      const pkg = JSON.parse(readFileSync(path.join(cwd, "package.json"), "utf-8"));
       const deps = { ...pkg.dependencies, ...pkg.devDependencies };
       const depList = Object.keys(deps);
 
@@ -25,7 +27,7 @@ function deteksiProjectDetail(): InfoProject[] {
         dependencies: depList,
       });
 
-      if (existsSync("vite.config.ts") || existsSync("vite.config.js")) {
+      if (existsSync(path.join(cwd, "vite.config.ts")) || existsSync(path.join(cwd, "vite.config.js"))) {
         hasil.push({ jenis: "Vite" });
       }
       if (depList.includes("react")) {
@@ -39,7 +41,7 @@ function deteksiProjectDetail(): InfoProject[] {
     }
   }
 
-  if (existsSync("composer.json")) {
+  if (existsSync(path.join(cwd, "composer.json"))) {
     hasil.push({ jenis: "Laravel" });
   }
 
@@ -57,9 +59,113 @@ function deteksiOS(): string {
   return "linux";
 }
 
+function daftarProjectDiFolder(folderPath: string): string[] {
+  try {
+    return readdirSync(folderPath, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+      .filter((name) => !name.startsWith("."));
+  } catch {
+    return [];
+  }
+}
+
+async function pilihFolderProject(): Promise<string | symbol> {
+  const environments = await deteksiEnvironmentLokal();
+  const wwwFolders = environments.filter((e) => e.terdeteksi && e.path.includes("www"));
+
+  const options: Array<{ value: string; label: string; hint: string }> = [];
+
+  if (wwwFolders.length > 0) {
+    for (const folder of wwwFolders) {
+      const projects = daftarProjectDiFolder(folder.path);
+      if (projects.length > 0) {
+        for (const project of projects) {
+          options.push({
+            value: path.join(folder.path, project),
+            label: `${project} — ${folder.path}`,
+            hint: `${folder.nama}`,
+          });
+        }
+      } else {
+        options.push({
+          value: folder.path,
+          label: `${folder.nama} — ${folder.path}`,
+          hint: "Folder kosong",
+        });
+      }
+    }
+  }
+
+  options.push({
+    value: "current",
+    label: "Folder saat ini",
+    hint: process.cwd(),
+  });
+
+  options.push({
+    value: "custom",
+    label: "Input lokasi folder manual",
+    hint: "Masukkan path folder sendiri",
+  });
+
+  const folder = await p.select({
+    message: "Pilih folder project:",
+    options,
+  });
+
+  if (p.isCancel(folder)) {
+    return folder;
+  }
+
+  if (folder === "current") {
+    return process.cwd();
+  }
+
+  if (folder === "custom") {
+    const pathCustom = await p.text({
+      message: "Masukkan path folder project:",
+      placeholder: "C:\\laragon\\www\\my-project",
+      validate: (value: string | undefined) => {
+        if (!value?.trim()) {
+          return "Path tidak boleh kosong.";
+        }
+        return undefined;
+      },
+    });
+
+    if (p.isCancel(pathCustom)) {
+      return pathCustom;
+    }
+
+    return pathCustom;
+  }
+
+  return folder;
+}
+
 async function installDiProjectYangAda(): Promise<void> {
   const os = deteksiOS();
-  const projectDetail = deteksiProjectDetail();
+
+  const folderProject = await pilihFolderProject();
+
+  if (p.isCancel(folderProject)) {
+    p.cancel("Operasi dibatalkan.");
+    return;
+  }
+
+  if (typeof folderProject !== "string") {
+    p.cancel("Operasi dibatalkan.");
+    return;
+  }
+
+  if (!existsSync(folderProject)) {
+    p.note(`Folder ${folderProject} tidak ditemukan.`, "Error");
+    p.outro("Silakan cek lokasi folder project.");
+    return;
+  }
+
+  const projectDetail = deteksiProjectDetail(folderProject);
 
   const infoProject = projectDetail
     .filter((p) => p.jenis !== "Tidak dikenali")
@@ -67,7 +173,7 @@ async function installDiProjectYangAda(): Promise<void> {
 
   if (infoProject.length === 0) {
     p.note(
-      "Tidak ada project terdeteksi di directory ini. Pastikan kamu berada di folder project.",
+      "Tidak ada project terdeteksi di folder ini. Pastikan folder berisi project yang valid.",
       "Project Saat Ini"
     );
     p.outro("Install teknologi membutuhkan project yang sudah ada.");
@@ -76,6 +182,7 @@ async function installDiProjectYangAda(): Promise<void> {
 
   p.note(
     [
+      `Folder: ${folderProject}`,
       `Project terdeteksi: ${infoProject.join(", ")}`,
       ...(projectDetail[0]?.dependencies
         ? [`Dependencies: ${projectDetail[0].dependencies.slice(0, 5).join(", ")}${projectDetail[0].dependencies.length > 5 ? "..." : ""}`]
@@ -118,6 +225,7 @@ async function installDiProjectYangAda(): Promise<void> {
     [
       `Teknologi: ${teksBerwarna(teknologi.nama, warnaTeknologi)}`,
       `Deskripsi: ${teknologi.deskripsi}`,
+      `Folder: ${folderProject}`,
       `OS: ${os}`,
       ``,
       `Perintah: ${perintahLengkap}`,
@@ -153,7 +261,7 @@ async function installDiProjectYangAda(): Promise<void> {
   const hasilInstall = await execute(
     perintahInstall,
     teknologi.perintahInstall.slice(1),
-    { shell: true }
+    { cwd: folderProject, shell: true }
   );
 
   if (!hasilInstall.success) {
@@ -176,7 +284,8 @@ async function installDiProjectYangAda(): Promise<void> {
   spinner.start("Memverifikasi instalasi...");
   const hasilVerifikasi = await execute(
     perintahVerifikasi,
-    teknologi.perintahVerifikasi.slice(1)
+    teknologi.perintahVerifikasi.slice(1),
+    { cwd: folderProject }
   );
 
   if (!hasilVerifikasi.success) {
@@ -187,7 +296,7 @@ async function installDiProjectYangAda(): Promise<void> {
   }
   spinner.stop("Verifikasi berhasil");
 
-  p.outro(`${teknologi.nama} berhasil diinstall!`);
+  p.outro(`${teknologi.nama} berhasil diinstall di ${folderProject}!`);
 }
 
 export async function jalankanInstallTeknologi(): Promise<void> {
@@ -199,7 +308,7 @@ export async function jalankanInstallTeknologi(): Promise<void> {
       {
         value: "existing",
         label: "Install di project yang sudah ada",
-        hint: "Install teknologi ke project yang sudah ada di folder ini",
+        hint: "Install teknologi ke project yang sudah ada",
       },
       {
         value: "new",
