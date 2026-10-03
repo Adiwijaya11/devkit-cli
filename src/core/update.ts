@@ -25,7 +25,7 @@ function bacaVersi(): string {
     }
   }
 
-  return "1.0.0";
+  return "0.0.0";
 }
 
 const VERSI_LOKAL = bacaVersi();
@@ -78,9 +78,20 @@ export async function tampilkanUpdate(): Promise<void> {
 
   try {
     await execa("npm", ["install", "-g", "devkit-tool@latest"], { timeout: 120000 });
-    spinner.stop("Update berhasil!");
-    p.outro("Silakan jalankan ulang `devkit` untuk menggunakan versi terbaru.");
-    process.exit(0);
+
+    // Validasi: cek apakah update berhasil
+    const hasilCek = await execa("npm", ["list", "-g", "devkit-tool", "--depth=0"], { timeout: 10000 });
+    const versiTerinstall = hasilCek.stdout.match(/devkit-tool@(\d+\.\d+\.\d+)/)?.[1] ?? "0.0.0";
+
+    if (versiTerinstall === versiTerbaru) {
+      spinner.stop("Update berhasil!");
+      p.outro("Silakan jalankan ulang `devkit` untuk menggunakan versi terbaru.");
+      process.exit(0);
+    } else {
+      spinner.stop("Update gagal");
+      p.note(`Versi terinstall: ${versiTerinstall}, versi terbaru: ${versiTerbaru}`, "Error");
+      p.note("Silakan update manual: npm install -g devkit-tool@latest", "Solusi");
+    }
   } catch {
     spinner.stop("Update gagal");
     p.note("Silakan update manual: npm install -g devkit-tool@latest", "Error");

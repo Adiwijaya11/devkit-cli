@@ -1,6 +1,6 @@
 {
   "name": "devkit-tool",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "CLI tool untuk membantu developer membuat project, menginstall teknologi, mengecek environment, dan mencari command yang sering lupa.",
   "main": "dist/index.js",
   "bin": {
