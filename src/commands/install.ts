@@ -261,15 +261,15 @@ async function installDiProjectYangAda(): Promise<void> {
   const hasilInstall = await execute(
     perintahInstall,
     teknologi.perintahInstall.slice(1),
-    { cwd: folderProject, shell: true }
+    { cwd: folderProject }
   );
 
   if (!hasilInstall.success) {
     spinner.stop("Gagal menginstall");
 
     p.note(
-      `Auto-install gagal. Berikut panduan manual untuk install ${teknologi.nama}:`,
-      "Panduan Install"
+      `Auto-install gagal. Error: ${hasilInstall.stderr || hasilInstall.stdout}`,
+      "Error"
     );
 
     if (teknologi.panduanManual) {
