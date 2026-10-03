@@ -1,13 +1,34 @@
 import { execa } from "execa";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { bold, cyan, green, yellow, reset } from "./warna.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const pkg = JSON.parse(readFileSync(path.join(__dirname, "../../package.json"), "utf-8"));
-const VERSI_LOKAL = pkg.version;
+function bacaVersi(): string {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+
+  const possiblePaths = [
+    path.join(__dirname, "../../package.json"),
+    path.join(__dirname, "../package.json"),
+    path.join(__dirname, "package.json"),
+  ];
+
+  for (const pkgPath of possiblePaths) {
+    if (existsSync(pkgPath)) {
+      try {
+        const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
+        return pkg.version;
+      } catch {
+        // lanjut ke path berikutnya
+      }
+    }
+  }
+
+  return "1.0.0";
+}
+
+const VERSI_LOKAL = bacaVersi();
 
 export async function cekUpdate(): Promise<{ adaUpdate: boolean; versiTerbaru: string }> {
   try {

@@ -1,13 +1,34 @@
 import * as p from "@clack/prompts";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { reset, bold, dim, yellow, cyan, white, warnaUntukTeknologi, teksBerwarna } from "./warna.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const pkg = JSON.parse(readFileSync(path.join(__dirname, "../../package.json"), "utf-8"));
-const VERSI = pkg.version;
+function bacaVersi(): string {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+
+  const possiblePaths = [
+    path.join(__dirname, "../../package.json"),
+    path.join(__dirname, "../package.json"),
+    path.join(__dirname, "package.json"),
+  ];
+
+  for (const pkgPath of possiblePaths) {
+    if (existsSync(pkgPath)) {
+      try {
+        const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
+        return pkg.version;
+      } catch {
+        // lanjut ke path berikutnya
+      }
+    }
+  }
+
+  return "1.0.0";
+}
+
+const VERSI = bacaVersi();
 
 function center(text: string, width: number): string {
   const lines = text.split("\n");
