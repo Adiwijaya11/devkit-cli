@@ -6,5 +6,5 @@ export const tailwind: DefinisiTeknologi = {
   requirements: ["node", "npm"],
   perintahBuat: [],
   perintahInstall: ["npm", "install", "-D", "tailwindcss", "@tailwindcss/vite"],
-  perintahVerifikasi: ["npx", "tailwindcss", "--help"],
+  perintahVerifikasi: ["npm", "list", "tailwindcss"],
 };
